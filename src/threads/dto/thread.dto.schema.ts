@@ -1,14 +1,14 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { HydratedDocument } from "mongoose";
 
-export type CategoryDocument = HydratedDocument<Category>;
+export type ThreadDocument = HydratedDocument<Thread>;
 
 @Schema({
     versionKey: false,
     timestamps: false,
     validateBeforeSave: true
 })
-export class Category{
+export class Thread{
     @Prop({required: true, unique: true})
     name: string;
 
@@ -22,4 +22,4 @@ export class Category{
     updateDate: Date;
 }
 
-export const CategorySchema = SchemaFactory.createForClass(Category);
+export const ThreadSchema = SchemaFactory.createForClass(Thread);
