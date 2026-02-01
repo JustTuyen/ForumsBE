@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadGatewayException, ConflictException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Category, CategoryDocument } from "../dto/category.schema";
 import { Model } from "mongoose";
@@ -31,20 +31,37 @@ export class CategoryService{
     }
 
     async update(id: string, data: Partial<Category>):Promise<Category>{
-        const updated = await this.CategoryModel.findByIdAndUpdate(
+        try{
+            const updated = await this.CategoryModel.findByIdAndUpdate(
             id,
             {
                 ...data,
                 updateDate: new Date(),
             },
-            { new: true}
-        )
+            { new: true, runValidators: true }
+            )
 
-        if(!updated){
-            throw new NotFoundException('category not found')
+            if(!updated){
+                throw new NotFoundException('category not found')
+            }
+
+            return updated
+            
+        } catch(err: any){
+            if (err?.code === 11000) {
+                const field = Object.keys(err.keyPattern || err.keyValue || {})[0];
+    
+                if (field === "name") {
+                    throw new ConflictException("name already exists");
+                }
+            }
+
+            if (err?.name === "ValidationError") {
+                throw new BadGatewayException(err.message);
+            }
+
+            throw new InternalServerErrorException('updated failed') 
         }
-
-        return updated
     }
 
     async remote(id: string): Promise<{message: string}>{
